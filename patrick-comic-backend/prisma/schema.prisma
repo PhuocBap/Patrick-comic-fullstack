@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model NguoiDung {
+  id           String      @id @default(cuid())
+  tenDangNhap  String      @unique
+  matKhau      String
+  email        String?     @unique
+  vaiTro       String      @default("USER")
+  isBlocked    Boolean     @default(false)
+  ngayTao      DateTime    @default(now())
+  
+  binhLuans    BinhLuan[]
+  theoDois     TheoDoi[]
+  lichSuDocs   LichSuDoc[]
+}
+
+model Truyen {
+  id            Int       @id @default(autoincrement())
+  tenTruyen     String
+  tenKhongDau   String?   
+  slug          String    @unique
+  tacGia        String?
+  moTa          String?
+  thumbnail     String?   
+  trangThai     String    @default("ĐANG_RA")
+  luotXem       Int       @default(0)
+  luotXemNgay   Int         @default(0)
+  luotXemTuan   Int         @default(0)
+  luotXemThang  Int         @default(0)
+  ngayTao       DateTime  @default(now())
+  ngayCapNhat   DateTime  @updatedAt
+
+  chuongs       Chuong[]
+  binhLuans     BinhLuan[]
+  theoDois      TheoDoi[]
+  theLoais      TheLoai[]
+  lichSuDocs    LichSuDoc[] 
+  @@index([tenKhongDau]) 
+  @@index([tenTruyen])
+}
+
+model TheLoai {
+  id      String   @id @default(cuid())
+  ten     String   @unique
+  truyens Truyen[]
+}
+
+model Chuong {
+  id           Int           @id @default(autoincrement())
+  tenChuong    String
+  soChuong     Float         
+  noiDung      String        
+  ngayCapNhat  DateTime      @default(now())
+  
+  truyenId     Int
+  truyen       Truyen        @relation(fields: [truyenId], references: [id])
+  lichSuDocs   LichSuDoc[]
+  binhLuans    BinhLuan[]
+  baoLois      BaoLoi[]
+  @@unique([truyenId, soChuong])
+}
+
+model BinhLuan {
+  id           String    @id @default(cuid())
+  noiDung      String
+  ngayBinhLuan DateTime  @default(now())
+  
+  nguoiDungId  String
+  nguoiDung    NguoiDung @relation(fields: [nguoiDungId], references: [id])
+  
+  truyenId     Int
+  truyen       Truyen    @relation(fields: [truyenId], references: [id])
+  
+  chuongId     Int?      
+  // CẬP NHẬT: Thêm onDelete: Cascade để khi xóa chương thì xóa luôn bình luận của chương đó
+  chuong       Chuong?   @relation(fields: [chuongId], references: [id], onDelete: Cascade)
+}
+
+model TheoDoi {
+  id           String    @id @default(cuid())
+  ngayTheoDoi  DateTime  @default(now())
+  
+  nguoiDungId  String
+  nguoiDung    NguoiDung @relation(fields: [nguoiDungId], references: [id])
+  
+  truyenId     Int
+  truyen       Truyen    @relation(fields: [truyenId], references: [id])
+
+  @@unique([nguoiDungId, truyenId])
+}
+
+model LichSuDoc {
+  id           String   @id @default(cuid())
+  thoiGianDoc  DateTime @default(now()) @updatedAt
+  
+  nguoiDungId  String
+  nguoiDung    NguoiDung @relation(fields: [nguoiDungId], references: [id])
+  
+  truyenId     Int      
+  truyen       Truyen    @relation(fields: [truyenId], references: [id])
+
+  chuongId     Int      
+  // CẬP NHẬT: Thêm onDelete: Cascade để khi xóa chương thì xóa luôn lịch sử đọc của chương đó
+  chuong       Chuong    @relation(fields: [chuongId], references: [id], onDelete: Cascade)
+
+  @@unique([nguoiDungId, truyenId])
+}
+
+model BaoLoi {
+  id        String   @id @default(cuid())
+  loaiLoi   String   
+  moTa      String?  
+  ngayTao   DateTime @default(now())
+  
+  chuongId  Int
+  // CẬP NHẬT: Thêm onDelete: Cascade để khi xóa chương thì xóa luôn báo lỗi của chương đó
+  chuong    Chuong   @relation(fields: [chuongId], references: [id], onDelete: Cascade)
+}

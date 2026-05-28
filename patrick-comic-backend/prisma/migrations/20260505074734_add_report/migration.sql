@@ -1,0 +1,9 @@
+-- CreateTable
+CREATE TABLE "BaoLoi" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "loaiLoi" TEXT NOT NULL,
+    "moTa" TEXT,
+    "ngayTao" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "chuongId" INTEGER NOT NULL,
+    CONSTRAINT "BaoLoi_chuongId_fkey" FOREIGN KEY ("chuongId") REFERENCES "Chuong" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
