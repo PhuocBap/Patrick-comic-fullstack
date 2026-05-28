@@ -45,19 +45,18 @@ export class ChuongRepository {
   }
 
   async create(data: { tenChuong: string; soChuong: number; noiDung: string; truyenId: number }) {
-    // Sử dụng cơ chế Transaction để đảm bảo tính toàn vẹn khi tạo chương và đẩy truyện lên đầu trang chủ
-    return this.prisma.$transaction(async (tx) => {
-      const newChapter = await tx.chuong.create({
-        data,
-      });
-
-      await tx.truyen.update({
-        where: { id: data.truyenId },
-        data: { ngayCapNhat: new Date() },
-      });
-
-      return newChapter;
+    // Đảm bảo tạo chương thành công trước, sau đó mới cập nhật ngày của truyện
+    const newChapter = await this.prisma.chuong.create({
+      data,
     });
+
+    // Tạo thành công hoàn toàn mới update thời gian hiển thị của truyện
+    await this.prisma.truyen.update({
+      where: { id: data.truyenId },
+      data: { ngayCapNhat: new Date() },
+    });
+
+    return newChapter;
   }
 
   async update(id: number, data: any) {

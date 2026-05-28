@@ -310,7 +310,7 @@ export class CrawlService {
     }
   }
 
-  async crawlMultiStoriesFromPage(urlPage: string) {
+ async crawlMultiStoriesFromPage(urlPage: string) {
     const globalBrowser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled']
@@ -401,12 +401,10 @@ export class CrawlService {
             }
           });
 
-          // FIX LỖI TẠI ĐÂY: Danh sách các từ khóa giao diện hệ thống cần loại bỏ hoàn toàn
           const genreBlacklist = ['thích', 'theo dõi', 'đọc từ đầu', 'đọc tiếp', 'bình luận', 'share', 'like'];
 
           $story('li.li03 a, .description a[href*="/the-loai/"]').each((_, el) => {
             const genreName = $story(el).text().trim();
-            // Lọc bỏ khoảng trắng và chỉ push nếu chữ không nằm trong blacklist
             if (genreName && !genreBlacklist.includes(genreName.toLowerCase())) {
               if (!extractedTheLoais.includes(genreName)) {
                 extractedTheLoais.push(genreName);
@@ -442,14 +440,7 @@ export class CrawlService {
           } else {
             currentTruyenId = Number(dbMatch.id);
             targetStoryDetail = await this.truyenService.getComicById(currentTruyenId).catch(() => null);
-            
-            await this.truyenService.updateComic(currentTruyenId, {
-              moTa: extractedMoTa,
-              tacGia: extractedTacGia,
-              theLoaiNames: extractedTheLoais
-            }).catch(() => {});
-
-            console.log(`[Hệ thống] Truyện [${story.tenTruyen}] đã tồn tại. Tiến hành quét bù chương...`);
+            console.log(`[Hệ thống] Truyện [${story.tenTruyen}] đã tồn tại trong DB. Đang phân tích chương...`);
           }
 
           const chaptersList: ChapterItem[] = [];
@@ -486,22 +477,42 @@ export class CrawlService {
           chaptersToCrawl.sort((a, b) => a.soChuong - b.soChuong);
 
           if (chaptersToCrawl.length === 0) {
-            console.log(`[Hệ thống] Truyện [${story.tenTruyen}] đã đầy đủ chương. Bỏ qua.`);
-            if (!isNewStory) updatedStories++; 
+            console.log(`[Hệ thống] Truyện [${story.tenTruyen}] đã đầy đủ chương & không có thay đổi. Bỏ qua để giữ nguyên vị trí.`);
             continue; 
           }
 
           console.log(`[Hệ thống] Đang tiến hành cào ${chaptersToCrawl.length} chương mới cho truyện [${story.tenTruyen}]...`);
+          
+          let localSuccessCount = 0; // Biến đếm số chương thực tế cào thành công của bộ truyện này
+
           for (const chapter of chaptersToCrawl) {
             try {
               await this.crawlSingleChapterFromBlogTruyen(chapter.url, Number(currentTruyenId), chapter.soChuong, chapter.tenChuong, globalBrowser);
+              localSuccessCount++;
               await new Promise(resolve => setTimeout(resolve, 500)); 
             } catch (err: any) {
               console.error(`Lỗi bỏ qua chương ${chapter.soChuong} của truyện ${story.tenTruyen}: ${err.message}`);
             }
           }
 
-          if (isNewStory) successStories++; else updatedStories++;
+          // CHỈ CẬP NHẬT TRUYỆN CŨ VÀ ĐẦY LÊN ĐẦU KHI CÓ ÍT NHẤT 1 CHƯƠNG THÀNH CÔNG KHÔNG LỖI
+          if (!isNewStory) {
+            if (localSuccessCount > 0) {
+              await this.truyenService.updateComic(currentTruyenId, {
+                moTa: extractedMoTa,
+                tacGia: extractedTacGia,
+                theLoaiNames: extractedTheLoais
+              }).catch(() => {});
+              updatedStories++;
+            } else {
+              console.log(`[Hệ thống] Truyện [${story.tenTruyen}] có chương mới nhưng cào lỗi hoàn toàn. Giữ nguyên vị trí cũ.`);
+            }
+          } else {
+            if (localSuccessCount > 0) {
+              successStories++;
+            }
+          }
+
           await new Promise(resolve => setTimeout(resolve, 1200)); 
 
         } catch (storyError: any) {
