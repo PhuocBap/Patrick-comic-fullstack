@@ -76,7 +76,6 @@ export default function Header() {
               <div className="h-2 w-full bg-transparent"></div>
               <div className="bg-[#1a1a1a] border border-gray-700 shadow-[0_20px_50px_rgba(0,0,0,1)] w-[180px] rounded-b-lg rounded-tr-lg overflow-hidden">
                 <div className="flex flex-col">
-                  
                   <Link href="/danh-sach/dang-ra" className="px-4 py-3 text-[#999] hover:text-white hover:bg-blue-600 transition-all font-medium text-[13px] border-b border-gray-800/50 flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span> Đang tiến hành
                   </Link>
@@ -100,22 +99,28 @@ export default function Header() {
                 <div className="mb-4 flex items-center gap-2 border-l-4 border-blue-600 pl-3">
                   <span className="text-white text-[11px] font-black uppercase tracking-[0.2em]">Khám phá thể loại</span>
                 </div>
-                <div className="grid grid-cols-3 gap-x-6 gap-y-1">
-                  {theLoais.length > 0 ? (
-                    theLoais.map((tl) => (
-                      <Link
-                        key={tl.id}
-                        href={`/the-loai/${tl.id}`}
-                        className="group/item text-[#999] hover:text-white hover:bg-blue-600/10 px-2 py-2 rounded transition-all duration-200 flex items-center border-b border-gray-800/50"
-                      >
-                        <span className="text-blue-500 mr-2 font-bold opacity-0 group-hover/item:opacity-100 transition-opacity">#</span>
-                        <span className="truncate text-[13px] font-medium">{tl.ten}</span>
-                      </Link>
-                    ))
-                  ) : (
-                    <p className="text-gray-500 col-span-full text-center py-4 italic">Đang tải dữ liệu...</p>
-                  )}
+                
+                {/* ĐOẠN ĐƯỢC SỬA: Bọc khung cuộn cố định chiều cao tối đa cho danh sách thể loại */}
+                <div className="max-h-[260px] overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="grid grid-cols-3 gap-x-6 gap-y-1">
+                    {theLoais.length > 0 ? (
+                      theLoais.map((tl) => (
+                        <Link
+                          key={tl.id}
+                          href={`/the-loai/${tl.id}`}
+                          className="group/item text-[#999] hover:text-white hover:bg-blue-600/10 px-2 py-2 rounded transition-all duration-200 flex items-center border-b border-gray-800/50"
+                        >
+                          <span className="text-blue-500 mr-2 font-bold opacity-0 group-hover/item:opacity-100 transition-opacity">#</span>
+                          <span className="truncate text-[13px] font-medium">{tl.ten}</span>
+                        </Link>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 col-span-full text-center py-4 italic">Đang tải dữ liệu...</p>
+                    )}
+                  </div>
                 </div>
+                {/* ------------------------------------------------------------- */}
+
               </div>
             </div>
           </div>
@@ -130,7 +135,6 @@ export default function Header() {
               <div className="h-2 w-full bg-transparent"></div>
               <div className="bg-[#1a1a1a] border border-gray-700 shadow-[0_20px_50px_rgba(0,0,0,1)] w-[180px] rounded-b-lg rounded-tr-lg overflow-hidden">
                 <div className="flex flex-col">
-                  {/* Sử dụng query params top khớp với controller 'xcp-hang' nếu cần */}
                   <Link href="/xep-hang?top=ngay" className="px-4 py-3 text-[#999] hover:text-white hover:bg-blue-600 transition-all font-medium text-[13px] border-b border-gray-800/50 flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span> Top Ngày
                   </Link>
