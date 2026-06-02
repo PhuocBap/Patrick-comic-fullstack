@@ -6,35 +6,44 @@ export class TruyenRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findLatestComics(skip: number, limit: number, where: any) {
+    // 🔥 CẬP NHẬT: Xử lý bộ lọc cho danh sách TRUYỆN SẮP RA MẮT
     if (where.trangThai === 'SAP_RA_MAT') {
-    delete where.trangThai; // Xóa key này đi vì DB không có giá trị này
-    where.chuongs = {
-      none: {} // Điều kiện của Prisma: không có bản ghi chuong nào liên kết
-    };
+      delete where.trangThai; // Xóa key ảo để tránh lỗi Prisma tìm cột không có trong DB
+
+      // Điều kiện: Hoàn toàn không có chương (none) HOẶC Tất cả các chương đều có số chương <= 0
+      where.OR = [
+        { chuongs: { none: {} } },
+        { chuongs: { every: { soChuong: { lte: 0 } } } }
+      ];
+    }
+
+    return this.prisma.truyen.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: [
+        { ngayCapNhat: 'desc' },
+        { id: 'desc' }
+      ],
+      include: {
+        chuongs: { take: 1, orderBy: { soChuong: 'desc' }, select: { soChuong: true } },
+        theLoais: true,
+      },
+    });
   }
 
-  return this.prisma.truyen.findMany({
-    where,
-    skip,
-    take: limit,
-    orderBy: [
-      { ngayCapNhat: 'desc' },
-      { id: 'desc' }
-    ],
-    include: {
-      chuongs: { take: 1, orderBy: { soChuong: 'desc' }, select: { soChuong: true } },
-      theLoais: true,
-    },
-  });
-}
-
- async countComics(where: any) {
-  if (where.trangThai === 'SAP_RA_MAT') {
-    delete where.trangThai;
-    where.chuongs = { none: {} };
+  async countComics(where: any) {
+    // 🔥 CẬP NHẬT: Đồng bộ logic đếm tổng số truyện với hàm findLatestComics để phân trang không bị lệch dữ liệu
+    if (where.trangThai === 'SAP_RA_MAT') {
+      delete where.trangThai;
+      
+      where.OR = [
+        { chuongs: { none: {} } },
+        { chuongs: { every: { soChuong: { lte: 0 } } } }
+      ];
+    }
+    return this.prisma.truyen.count({ where });
   }
-  return this.prisma.truyen.count({ where });
-}
 
   async findComicsOrderBy(orderByField: any, limit: number) {
     return this.prisma.truyen.findMany({
@@ -74,7 +83,7 @@ export class TruyenRepository {
     const theLoaiConnection = data.theLoaiNames ? {
       connectOrCreate: data.theLoaiNames.map((name: string) => ({
         where: { ten: name.trim() },
-        create: { ten: name.trim() } // Đã sửa: Bỏ trường slug thừa không có trong Schema
+        create: { ten: name.trim() } 
       }))
     } : undefined;
 
@@ -99,7 +108,6 @@ export class TruyenRepository {
     
     let theLoaiUpdate: any = undefined;
 
-    // Xử lý lưu thể loại thủ công bằng ID từ Giao diện Admin gửi lên
     if (data.theLoaiIds && Array.isArray(data.theLoaiIds)) {
       const cleanIds = data.theLoaiIds
         .map((tid: any) => tid?.toString().trim())
@@ -109,12 +117,11 @@ export class TruyenRepository {
         set: cleanIds.map((tid: string) => ({ id: tid })) 
       };
     } 
-    // Xử lý map từ mảng chuỗi string theLoaiNames khi cào tự động
     else if (data.theLoaiNames && Array.isArray(data.theLoaiNames)) {
       theLoaiUpdate = {
         connectOrCreate: data.theLoaiNames.map((name: string) => ({
           where: { ten: name.trim() }, 
-          create: { ten: name.trim() } // Đã sửa: Bỏ trường slug thừa không có trong Schema
+          create: { ten: name.trim() } 
         }))
       };
     }
@@ -129,6 +136,8 @@ export class TruyenRepository {
         thumbnail: data.thumbnail,
         trangThai: data.trangThai,
         theLoais: theLoaiUpdate,
+        // 🔥 ĐÃ THÊM: Làm mới ngày cập nhật khi sửa từ Admin để truyện tự đẩy lên đầu danh sách sắp ra mắt
+        ngayCapNhat: new Date(),
       },
     });
   }
@@ -182,4 +191,4 @@ export class TruyenRepository {
       .trim()
       .replace(/\s+/g, ' ');
   }
-}          
+}
