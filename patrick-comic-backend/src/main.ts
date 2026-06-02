@@ -7,10 +7,7 @@ async function bootstrap() {
 
   // 1. Cấu hình CORS mở rộng cho cả môi trường dev và production
   app.enableCors({
-    origin: [
-      'http://localhost:3000', 
-      /\.onrender\.com$/ // Cho phép tất cả các sub-domain từ Render gọi tới API
-    ], 
+    origin: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
