@@ -6,24 +6,35 @@ export class TruyenRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findLatestComics(skip: number, limit: number, where: any) {
-    return this.prisma.truyen.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: [
-        { ngayCapNhat: 'desc' },
-        { id: 'desc' }
-      ],
-      include: {
-        chuongs: { take: 1, orderBy: { soChuong: 'desc' }, select: { soChuong: true } },
-        theLoais: true,
-      },
-    });
+    if (where.trangThai === 'SAP_RA_MAT') {
+    delete where.trangThai; // Xóa key này đi vì DB không có giá trị này
+    where.chuongs = {
+      none: {} // Điều kiện của Prisma: không có bản ghi chuong nào liên kết
+    };
   }
 
-  async countComics(where: any) {
-    return this.prisma.truyen.count({ where });
+  return this.prisma.truyen.findMany({
+    where,
+    skip,
+    take: limit,
+    orderBy: [
+      { ngayCapNhat: 'desc' },
+      { id: 'desc' }
+    ],
+    include: {
+      chuongs: { take: 1, orderBy: { soChuong: 'desc' }, select: { soChuong: true } },
+      theLoais: true,
+    },
+  });
+}
+
+ async countComics(where: any) {
+  if (where.trangThai === 'SAP_RA_MAT') {
+    delete where.trangThai;
+    where.chuongs = { none: {} };
   }
+  return this.prisma.truyen.count({ where });
+}
 
   async findComicsOrderBy(orderByField: any, limit: number) {
     return this.prisma.truyen.findMany({
@@ -171,4 +182,4 @@ export class TruyenRepository {
       .trim()
       .replace(/\s+/g, ' ');
   }
-}
+}          
