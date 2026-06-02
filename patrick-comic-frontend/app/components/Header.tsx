@@ -77,7 +77,7 @@ export default function Header() {
               <div className="bg-[#1a1a1a] border border-gray-700 shadow-[0_20px_50px_rgba(0,0,0,1)] w-[180px] rounded-b-lg rounded-tr-lg overflow-hidden">
                 <div className="flex flex-col">
                   <Link href="/danh-sach/sap-ra-mat" className="px-4 py-3 text-[#999] hover:text-white hover:bg-blue-600 transition-all font-medium text-[13px] border-b border-gray-800/50 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span> Đang tiến hành
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>  Sắp Ra Mắt
                   </Link>
                   <Link href="/danh-sach/hoan-thanh" className="px-4 py-3 text-[#999] hover:text-white hover:bg-blue-600 transition-all font-medium text-[13px] flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span> Đã hoàn thành

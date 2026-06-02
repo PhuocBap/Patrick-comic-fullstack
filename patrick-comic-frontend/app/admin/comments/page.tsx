@@ -1,9 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link"; // Đã thêm Link để chuyển hướng nội bộ không reload trang
+import Link from "next/link"; 
 
-export default function AdminComments() {
+// ========================================================
+// 1. COMPONENT CON: Chứa toàn bộ logic xử lý dữ liệu và giao diện chính
+// ========================================================
+function AdminCommentsContent() {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,18 +35,23 @@ export default function AdminComments() {
     }
   };
 
-  useEffect(() => { fetchComments(); }, [chuongId, truyenId]);
+  useEffect(() => { 
+    fetchComments(); 
+  }, [chuongId, truyenId]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Xóa bình luận này?")) return;
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/comments/${id}`, { method: "DELETE" });
       if (res.ok) setComments(comments.filter((c: any) => c.id !== id));
-    } catch (error) { alert("Lỗi khi xóa!"); }
+    } catch (error) { 
+      alert("Lỗi khi xóa!"); 
+    }
   };
 
   if (loading) return <div className="p-6 text-gray-500">Đang tải bình luận...</div>;
 
+  // Toàn bộ giao diện hiển thị table được đưa vào ĐÚNG trong component này
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -104,5 +112,16 @@ export default function AdminComments() {
         <div className="p-8 text-center text-gray-500 italic">Không có bình luận nào được tìm thấy.</div>
       )}
     </div>
+  );
+}
+
+// ========================================================
+// 2. COMPONENT CHA (Export chính): Bọc Suspense chống lỗi Prerender Vercel
+// ========================================================
+export default function AdminComments() {
+  return (
+    <Suspense fallback={<div className="p-6 text-gray-500">Đang tải trang quản lý...</div>}>
+      <AdminCommentsContent />
+    </Suspense>
   );
 }
