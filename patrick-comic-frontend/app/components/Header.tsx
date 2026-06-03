@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import LogoutButton from "./LogoutButton";
 import SearchBar from "./SearchBar";
-import AuthModal from "./AuthModal";
+import AuthModal from "./AuthModal"; // Đã import sẵn ở đây
 
 export default function Header() {
   const { data: session } = useSession();
@@ -81,7 +81,7 @@ export default function Header() {
           )}
         </button>
 
-        {/* NAVIGATION CHO DESKTOP (Ẩn trên màn hình < xl, hiện từ xl trở lên) */}
+        {/* NAVIGATION CHO DESKTOP */}
         <nav className="hidden xl:flex items-center gap-1 text-[13px] font-semibold uppercase tracking-wide flex-shrink-0">
           <Link 
             href="/" 
@@ -190,7 +190,7 @@ export default function Header() {
             </Link>
           )}
 
-          {/* USER INFO & AUTH */}
+          {/* USER INFO & AUTH DESKTOP */}
           <div className="flex items-center gap-3 border-l border-gray-700 ml-2 pl-4">
             {session ? (
               <div className="flex items-center gap-3 whitespace-nowrap">
@@ -224,7 +224,7 @@ export default function Header() {
         </nav>
       </div>
 
-      {/* MOBILE NAVIGATION MENU (CHỈ HIỆN KHI BẤM TOGGLE) */}
+      {/* MOBILE NAVIGATION MENU */}
       {isMobileMenuOpen && (
         <div className="xl:hidden w-full bg-[#1e1e1e] border-t border-gray-800 mt-3 px-4 py-4 absolute left-0 right-0 top-full shadow-2xl z-[9999] flex flex-col gap-2">
           <Link 
@@ -248,7 +248,6 @@ export default function Header() {
             Theo dõi
           </Link>
 
-          {/* CÁC ĐƯỜNG DẪN CON KHÁC */}
           <div className="grid grid-cols-2 gap-2 mt-1 pt-2 border-t border-gray-800">
             <Link href="/danh-sach/sap-ra-mat" className="p-2 text-xs text-gray-400 bg-gray-900/60 rounded text-center">Sắp Ra Mắt</Link>
             <Link href="/danh-sach/hoan-thanh" className="p-2 text-xs text-gray-400 bg-gray-900/60 rounded text-center">Đã Hoàn Thành</Link>
@@ -290,6 +289,15 @@ export default function Header() {
             )}
           </div>
         </div>
+      )}
+
+      {/* 🔥 FIX CHÍ MẠNG Ở ĐÂY: Nhúng Component AuthModal vào DOM để kích hoạt đóng/mở */}
+      {authModal.isOpen && (
+        <AuthModal
+          isOpen={authModal.isOpen}
+          onClose={() => setAuthModal({ ...authModal, isOpen: false })}
+          initialMode={authModal.mode}
+        />
       )}
     </header>
   );
