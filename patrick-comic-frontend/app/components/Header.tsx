@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import LogoutButton from "./LogoutButton";
 import SearchBar from "./SearchBar";
-import AuthModal from "./AuthModal"; // Đã import sẵn ở đây
+import AuthModal from "./AuthModal";
 
 export default function Header() {
   const { data: session } = useSession();
@@ -44,6 +44,12 @@ export default function Header() {
       })
       .catch((err) => console.error("Lỗi lấy thể loại:", err));
   }, []);
+
+  // 🔥 Hàm xử lý bật Modal và tự động đóng luôn Menu Mobile
+  const handleOpenAuthModal = (mode: "login" | "register") => {
+    setAuthModal({ isOpen: true, mode });
+    setIsMobileMenuOpen(false); // Đóng menu mobile ngay lập tức để không che khuất Modal
+  };
 
   const isActive = (path: string) => pathname === path;
 
@@ -207,13 +213,13 @@ export default function Header() {
             ) : (
               <div className="flex items-center gap-2 whitespace-nowrap">
                 <button 
-                  onClick={() => setAuthModal({ isOpen: true, mode: "login" })}
+                  onClick={() => handleOpenAuthModal("login")}
                   className="px-3 py-1.5 text-gray-300 hover:text-white transition font-bold"
                 >
                   Đăng nhập
                 </button>
                 <button 
-                  onClick={() => setAuthModal({ isOpen: true, mode: "register" })}
+                  onClick={() => handleOpenAuthModal("register")}
                   className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded font-bold transition shadow-lg shadow-blue-900/20"
                 >
                   Đăng ký
@@ -274,13 +280,13 @@ export default function Header() {
             ) : (
               <div className="flex items-center gap-2 w-full justify-end">
                 <button 
-                  onClick={() => setAuthModal({ isOpen: true, mode: "login" })}
+                  onClick={() => handleOpenAuthModal("login")}
                   className="px-4 py-2 text-sm text-gray-300 hover:text-white font-bold"
                 >
                   Đăng nhập
                 </button>
                 <button 
-                  onClick={() => setAuthModal({ isOpen: true, mode: "register" })}
+                  onClick={() => handleOpenAuthModal("register")}
                   className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded font-bold transition"
                 >
                   Đăng ký
@@ -291,7 +297,7 @@ export default function Header() {
         </div>
       )}
 
-      {/* 🔥 FIX CHÍ MẠNG Ở ĐÂY: Nhúng Component AuthModal vào DOM để kích hoạt đóng/mở */}
+      {/* AuthModal sẽ được render tách biệt sạch sẽ */}
       {authModal.isOpen && (
         <AuthModal
           isOpen={authModal.isOpen}

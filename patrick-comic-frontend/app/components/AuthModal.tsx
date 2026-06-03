@@ -16,6 +16,11 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  // Đồng bộ lại mode nếu prop initialMode thay đổi từ bên ngoài
+  useEffect(() => {
+    setMode(initialMode);
+  }, [initialMode]);
+
   // Reset lỗi khi chuyển chế độ
   useEffect(() => { setError(""); }, [mode]);
 
@@ -41,7 +46,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
       });
 
       if (res?.error) {
-        // Lấy thông điệp lỗi động được truyền từ Backend lên thay vì viết cứng chữ
         setError(res.error);
         setLoading(false);
       } else {
@@ -72,15 +76,17 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    // 🔥 Đã đổi từ z-[100] thành z-[10000] để đè lên menu mobile (z-[9999])
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 overflow-y-auto bg-black/40">
+      
       {/* Overlay: Lớp nền mờ giống web phim */}
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal Box */}
-      <div className="relative w-full max-w-md bg-[#161b22] p-8 rounded-2xl shadow-2xl border border-gray-800 animate-in fade-in zoom-in duration-200">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-white">✕</button>
+      <div className="relative w-full max-w-md bg-[#161b22] p-8 rounded-2xl shadow-2xl border border-gray-800 animate-in fade-in zoom-in duration-200 z-10 my-auto">
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors">✕</button>
         
-        <h2 className="text-3xl font-extrabold text-center text-blue-500 mb-2 uppercase tracking-tight">PATRIC COMIC</h2>
+        <h2 className="text-3xl font-extrabold text-center text-blue-500 mb-2 uppercase tracking-tight">PATRICK COMIC</h2>
         <p className="text-gray-400 text-center mb-8 text-sm">
           {mode === "login" ? "Chào mừng ông quay trở lại!" : "Tạo tài khoản để trải nghiệm tốt nhất"}
         </p>
@@ -105,6 +111,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
               <input
                 type="email"
                 className="w-full p-3 rounded-xl bg-[#0d1117] border border-gray-700 text-white outline-none focus:border-blue-600 transition-all"
+                value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               />
             </div>
@@ -127,12 +134,13 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
                 <input
                   type="password"
                   className="w-full p-3 rounded-xl bg-[#1a160d] border border-yellow-900/50 text-yellow-500 outline-none focus:border-yellow-600 transition-all"
+                  value={formData.adminCode}
                   onChange={(e) => setFormData({ ...formData, adminCode: e.target.value })}
                 />
              </div>
           )}
 
-          <button disabled={loading} className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold transition-transform active:scale-95 uppercase">
+          <button disabled={loading} className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold transition-all active:scale-95 uppercase disabled:opacity-50">
             {loading ? "ĐANG XỬ LÝ..." : mode === "login" ? "ĐĂNG NHẬP NGAY" : "ĐĂNG KÝ NGAY"}
           </button>
         </form>
