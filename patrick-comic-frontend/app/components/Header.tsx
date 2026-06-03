@@ -13,12 +13,20 @@ export default function Header() {
   const pathname = usePathname();
   const [theLoais, setTheLoais] = useState<{ id: string | number; ten: string }[]>([]);
   
+  // State quản lý việc đóng mở menu trên mobile
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   const [authModal, setAuthModal] = useState<{ isOpen: boolean; mode: "login" | "register" }>({
     isOpen: false,
     mode: "login",
   });
 
   const isAdmin = session?.user?.role === "ADMIN";
+
+  // Tự động đóng menu mobile khi người dùng chuyển trang
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -37,7 +45,6 @@ export default function Header() {
       .catch((err) => console.error("Lỗi lấy thể loại:", err));
   }, []);
 
-  // Helper function để kiểm tra link active
   const isActive = (path: string) => pathname === path;
 
   return (
@@ -57,8 +64,25 @@ export default function Header() {
           <SearchBar />
         </div>
 
-        {/* NAVIGATION */}
-        <nav className="flex items-center gap-1 text-[13px] font-semibold uppercase tracking-wide flex-shrink-0">
+        {/* BUTTON TOGGLE MENU (CHỈ HIỆN TRÊN MOBILE VÀ TABLET) */}
+        <button 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="xl:hidden p-2 text-gray-400 hover:text-white rounded bg-gray-800/50 transition-all"
+          aria-label="Toggle Menu"
+        >
+          {isMobileMenuOpen ? (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          )}
+        </button>
+
+        {/* NAVIGATION CHO DESKTOP (Ẩn trên màn hình < xl, hiện từ xl trở lên) */}
+        <nav className="hidden xl:flex items-center gap-1 text-[13px] font-semibold uppercase tracking-wide flex-shrink-0">
           <Link 
             href="/" 
             className={`px-3 py-2 rounded transition whitespace-nowrap ${isActive('/') ? 'text-white bg-gray-700' : 'text-gray-300 hover:text-white hover:bg-gray-700'}`}
@@ -100,7 +124,6 @@ export default function Header() {
                   <span className="text-white text-[11px] font-black uppercase tracking-[0.2em]">Khám phá thể loại</span>
                 </div>
                 
-                {/* ĐOẠN ĐƯỢC SỬA: Bọc khung cuộn cố định chiều cao tối đa cho danh sách thể loại */}
                 <div className="max-h-[260px] overflow-y-auto pr-2 custom-scrollbar">
                   <div className="grid grid-cols-3 gap-x-6 gap-y-1">
                     {theLoais.length > 0 ? (
@@ -119,8 +142,6 @@ export default function Header() {
                     )}
                   </div>
                 </div>
-                {/* ------------------------------------------------------------- */}
-
               </div>
             </div>
           </div>
@@ -203,11 +224,73 @@ export default function Header() {
         </nav>
       </div>
 
-      <AuthModal 
-        isOpen={authModal.isOpen}
-        initialMode={authModal.mode}
-        onClose={() => setAuthModal({ ...authModal, isOpen: false })}
-      />
+      {/* MOBILE NAVIGATION MENU (CHỈ HIỆN KHI BẤM TOGGLE) */}
+      {isMobileMenuOpen && (
+        <div className="xl:hidden w-full bg-[#1e1e1e] border-t border-gray-800 mt-3 px-4 py-4 absolute left-0 right-0 top-full shadow-2xl z-[9999] flex flex-col gap-2">
+          <Link 
+            href="/" 
+            className={`px-4 py-2.5 rounded text-sm font-semibold uppercase ${isActive('/') ? 'text-white bg-gray-700' : 'text-gray-300 hover:text-white bg-gray-900/40'}`}
+          >
+            Trang chủ
+          </Link>
+          
+          <Link 
+            href="/history" 
+            className={`px-4 py-2.5 rounded text-sm font-semibold uppercase ${isActive('/history') ? 'text-white bg-gray-700' : 'text-gray-300 hover:text-white bg-gray-900/40'}`}
+          >
+            Lịch sử
+          </Link>
+
+          <Link 
+            href="/theo-doi" 
+            className={`px-4 py-2.5 rounded text-sm font-semibold uppercase ${isActive('/theo-doi') ? 'text-white bg-gray-700' : 'text-gray-300 hover:text-white bg-gray-900/40'}`}
+          >
+            Theo dõi
+          </Link>
+
+          {/* CÁC ĐƯỜNG DẪN CON KHÁC */}
+          <div className="grid grid-cols-2 gap-2 mt-1 pt-2 border-t border-gray-800">
+            <Link href="/danh-sach/sap-ra-mat" className="p-2 text-xs text-gray-400 bg-gray-900/60 rounded text-center">Sắp Ra Mắt</Link>
+            <Link href="/danh-sach/hoan-thanh" className="p-2 text-xs text-gray-400 bg-gray-900/60 rounded text-center">Đã Hoàn Thành</Link>
+            <Link href="/xep-hang?top=ngay" className="p-2 text-xs text-gray-400 bg-gray-900/60 rounded text-center">Top Ngày</Link>
+            <Link href="/xep-hang?top=tuan" className="p-2 text-xs text-gray-400 bg-gray-900/60 rounded text-center">Top Tuần</Link>
+          </div>
+
+          {isAdmin && (
+            <Link href="/admin/them-truyen" className="mt-2 p-2 text-center text-xs text-yellow-500 bg-yellow-500/10 border border-yellow-500/20 rounded font-bold">
+              Khu vực ADMIN
+            </Link>
+          )}
+
+          {/* PHẦN AUTHENTICATION TRÊN MOBILE */}
+          <div className="mt-4 pt-4 border-t border-gray-800 flex items-center justify-between">
+            {session ? (
+              <div className="flex items-center justify-between w-full">
+                <div className="flex flex-col">
+                  <span className="text-blue-400 font-bold text-sm">@{session.user?.name || "user"}</span>
+                  <span className="text-[10px] text-gray-500">{isAdmin ? "QUẢN TRỊ VIÊN" : "THÀNH VIÊN"}</span>
+                </div>
+                <LogoutButton />
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 w-full justify-end">
+                <button 
+                  onClick={() => setAuthModal({ isOpen: true, mode: "login" })}
+                  className="px-4 py-2 text-sm text-gray-300 hover:text-white font-bold"
+                >
+                  Đăng nhập
+                </button>
+                <button 
+                  onClick={() => setAuthModal({ isOpen: true, mode: "register" })}
+                  className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded font-bold transition"
+                >
+                  Đăng ký
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }

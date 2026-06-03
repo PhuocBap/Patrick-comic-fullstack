@@ -19,6 +19,14 @@
   }
 }
 
+/* THÊM THUỘC TÍNH CHỐNG TRÀN VÀ ĐỊNH VỊ CHO HTML/BODY */
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  position: relative;
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -26,26 +34,24 @@ body {
 }
 
 /* --- CUSTOM SCROLLBAR CHO DANH SÁCH CHƯƠNG & THỂ LOẠI --- */
-/* Dành cho Chrome, Safari, Edge */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02); /* Thêm nền tối mờ để dễ nhìn đường ray */
+  background: rgba(255, 255, 255, 0.02);
   border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #475569; /* Đổi sang Slate-600 để nổi bật hơn trên nền đen menu */
+  background: #475569;
   border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #3b82f6; /* Biến thành màu xanh tương đồng màu chủ đạo của web khi hover */
+  background: #3b82f6;
 }
 
-/* Dành cho Firefox */
 .custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: #475569 transparent;
