@@ -18,7 +18,7 @@ export class ChuongController {
     if (!slug || !soChuong) {
       throw new BadRequestException('Thiếu tham số slug hoặc soChuong');
     }
-    return this.chuongService.findChapterBySlugAndNumber(slug, parseInt(soChuong, 10));
+    return this.chuongService.findChapterBySlugAndNumber(slug, parseFloat(soChuong));
   }
 
   @Post('crawl-bulk-stories')

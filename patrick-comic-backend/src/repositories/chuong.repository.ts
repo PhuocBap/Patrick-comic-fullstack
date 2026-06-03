@@ -31,11 +31,13 @@ export class ChuongRepository {
   }
 
   async incrementTruyenViewRaw(truyenId: number) {
-    // Ép chạy ngầm Raw SQL đúng thiết kế ban đầu để cô lập tiến trình khỏi updatedAt
-    this.prisma.$executeRawUnsafe(
-      `UPDATE "Truyen" SET "luotXem" = COALESCE("luotXem", 0) + 1 WHERE "id" = ${truyenId}`
-    ).catch(err => console.error("Lỗi tăng view ngầm bằng Raw SQL:", err));
-  }
+  // Sử dụng dấu bạcktick kèm $executeRaw của Prisma giúp tự động ép tham số, chống SQL Injection
+  this.prisma.$executeRaw`
+    UPDATE "Truyen" 
+    SET "luotXem" = COALESCE("luotXem", 0) + 1 
+    WHERE "id" = ${truyenId}
+  `.catch(err => console.error("Lỗi tăng view ngầm bằng Raw SQL:", err));
+}
 
   async findById(id: number) {
     return this.prisma.chuong.findUnique({
