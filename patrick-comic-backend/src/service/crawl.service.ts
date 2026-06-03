@@ -396,11 +396,6 @@ export class CrawlService {
     .replace(/blogtruyenmoi\.net/gi, 'patrick-comic.vercel.app')
     .replace(/blogtruyenmoi/gi, 'PATRICK COMIC')
     .replace(/blogtruyen/gi, 'PATRICK COMIC');
-
-  // 2. Nếu muốn xóa hẳn câu quảng cáo rập khuôn (Optional)
-  // Đoạn regex này tìm câu có chứa "hiện đang là bộ truyện tranh được nhiều người đọc nhất..." và xóa nó đi
-  const quảngCáoRegex = /"([^"]+)"\s*hiện đang là bộ truyện tranh được nhiều người đọc nhất[\s\S]*?chương mới nhất\./gi;
-  extractedMoTa = extractedMoTa.replace(quảngCáoRegex, '').trim();
 }
 
           let extractedTacGia = "Đang cập nhật";
