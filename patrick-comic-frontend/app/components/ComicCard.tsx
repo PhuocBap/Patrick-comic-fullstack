@@ -36,12 +36,12 @@ export default function ComicCard({ comic }: { comic: any }) {
       {/* Khối Ảnh Cover */}
       <div className="relative aspect-[3/4] overflow-hidden bg-gray-900">
         <img
-          src={data.thumbnail}
-          alt={data.tenTruyen}
-          referrerPolicy="no-referrer"
-          loading="lazy"
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-        />
+  src={data.thumbnail?.replace(/src=http:\/\//g, 'src=https://')} // Tự động ép link con thành https
+  alt={data.tenTruyen}
+  referrerPolicy="no-referrer"
+  loading="lazy"
+  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+/>
         
         {/* Lớp phủ Gradient khi hover để nổi bật nội dung */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#0d1117] via-transparent to-transparent opacity-0 group-hover:opacity-60 transition-opacity duration-300" />

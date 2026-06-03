@@ -99,7 +99,12 @@ export default function ComicDetailPage({ params }: PageProps) {
         <div className="flex flex-col md:flex-row gap-10 bg-[#121212] p-6 md:p-10 rounded-[2.5rem] border border-gray-800/50 shadow-2xl relative overflow-hidden mt-4">
           <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/5 blur-[100px] rounded-full"></div>
           <div className="w-full md:w-[280px] shrink-0 z-10">
-            <img src={comic.thumbnail || "/no-image.jpg"} alt={comic.tenTruyen} referrerPolicy="no-referrer" className="w-full rounded-[2rem] shadow-2xl object-cover aspect-[3/4] border border-gray-700 hover:border-blue-600 transition-all" />
+            <img 
+  src={comic.thumbnail?.replace(/src=http:\/\//g, 'src=https://') || "/no-image.jpg"} 
+  alt={comic.tenTruyen} 
+  referrerPolicy="no-referrer" 
+  className="w-full rounded-[2rem] shadow-2xl object-cover aspect-[3/4] border border-gray-700 hover:border-blue-600 transition-all" 
+/>
           </div>
 
           <div className="flex-1 flex flex-col z-10">

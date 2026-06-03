@@ -68,7 +68,7 @@ export default function ChapterInfo({
       <nav className="text-sm text-gray-400 mb-4 flex flex-wrap gap-2 items-center">
         <Link href="/" className="hover:text-blue-500 transition-colors">Trang Chủ</Link>
         <span className="opacity-50">/</span>
-        <Link href={`/id-story/${truyenId}`} className="hover:text-blue-500 transition-colors">{comicName}</Link>
+        <Link href={`/${slug}/${truyenId}`} className="hover:text-blue-500 transition-colors">{comicName}</Link>
         <span className="opacity-50">/</span>
         <span className="text-gray-500 italic">Chương {chapterNumber}</span>
       </nav>

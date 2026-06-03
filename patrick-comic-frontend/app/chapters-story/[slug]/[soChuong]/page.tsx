@@ -104,13 +104,13 @@ export default function ChapterPage({ params }: PageProps) {
           {danhSachAnh.length > 0 ? (
             danhSachAnh.map((url: string, idx: number) => (
               <img 
-                key={`img-${chapter.id}-${idx}`}
-                src={url} 
-                referrerPolicy="no-referrer" 
-                alt={`Trang ${idx + 1}`} 
-                className="w-full h-auto block select-none" 
-                loading={idx > 2 ? "lazy" : "eager"} 
-              />
+  key={`img-${chapter.id}-${idx}`}
+  src={url.replace(/src=http:\/\//g, 'src=https://')} // Đảm bảo an toàn HTTPS cho từng trang truyện
+  referrerPolicy="no-referrer" 
+  alt={`Trang ${idx + 1}`} 
+  className="w-full h-auto block select-none" 
+  loading={idx > 2 ? "lazy" : "eager"} 
+/>
             ))
           ) : (
             <div className="py-20 text-center text-gray-500 italic">Không có nội dung hình ảnh.</div>
