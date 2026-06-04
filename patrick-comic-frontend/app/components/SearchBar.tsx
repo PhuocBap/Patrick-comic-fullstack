@@ -14,23 +14,37 @@ export default function SearchBar() {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
   useEffect(() => {
+    // Tăng thời gian chờ lên 1200ms (1.2 giây) để tránh lag và giảm số lần gọi API liên tục
     const timer = setTimeout(async () => {
       const trimmed = query.trim();
       if (trimmed.length >= 1) {
         setLoading(true);
         setError(false);
         try {
-          // Gọi endpoint /stories/search
           const res = await fetch(`${backendUrl}/stories/search?query=${encodeURIComponent(trimmed)}`);
           
           if (!res.ok) {
-             // Nếu server trả về lỗi (như lỗi 500 trong image_48d1d6.jpg)
              throw new Error(`Server Error: ${res.status}`);
           }
 
           const data = await res.json();
-          // Đảm bảo kết quả là một mảng
-          const finalData = Array.isArray(data) ? data : (data.data || []);
+          let finalData = Array.isArray(data) ? data : (data.data || []);
+          
+          // --- THUẬT TOÁN SẮP XẾP ƯU TIÊN CHỮ CÁI ĐẦU ---
+          const lowerQuery = trimmed.toLowerCase();
+          finalData = [...finalData].sort((a, b) => {
+            const nameA = (a.tenTruyen || "").toLowerCase();
+            const nameB = (b.tenTruyen || "").toLowerCase();
+            
+            const startsWithA = nameA.startsWith(lowerQuery);
+            const startsWithB = nameB.startsWith(lowerQuery);
+
+            if (startsWithA && !startsWithB) return -1; // Đẩy truyện bắt đầu bằng chữ V lên đầu
+            if (!startsWithA && startsWithB) return 1;  // Hạ các truyện khác xuống dưới
+            return 0; // Giữ nguyên thứ tự nếu cả 2 cùng bắt đầu hoặc cùng chứa ở giữa
+          });
+          // ---------------------------------------------
+
           setResults(finalData);
           setShowDropdown(true);
         } catch (error) {
@@ -44,12 +58,12 @@ export default function SearchBar() {
         setResults([]);
         setShowDropdown(false);
       }
-    }, 400); 
+    }, 1200); // Khoảng thời gian lý tưởng từ 1 - 2 giây theo yêu cầu của bạn
 
     return () => clearTimeout(timer);
   }, [query, backendUrl]);
 
-  // Xử lý đóng dropdown
+  // Xử lý đóng dropdown khi bấm ra ngoài
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
