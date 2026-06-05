@@ -11,10 +11,9 @@ export default function Footer() {
 
         {/* Links */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-sm mb-8">
-          <a href="#" className="hover:text-white transition">truyenpatrick</a>
+          <a href="#" className="hover:text-white transition">truyencuaphuocbap</a>
           <a href="#" className="hover:text-white transition">patrick-comic</a>
-          <a href="#" className="hover:text-white transition">phuocbap</a>
-          <a href="#" className="hover:text-white transition">Liên hệ</a>
+          <a href="#" className="hover:text-white transition">phuocbap13@gmail.com</a>         
         </div>
 
         {/* Copyright */}
