@@ -14,56 +14,73 @@ export default function SearchBar() {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
   useEffect(() => {
-    // Tăng thời gian chờ lên 1200ms (1.2 giây) để tránh lag và giảm số lần gọi API liên tục
+    const trimmed = query.trim();
+
+    // TỐI ƯU 1: Xử lý xóa trống ngay lập tức, không đợi kết thúc hiệu ứng debounce
+    if (trimmed.length < 1) {
+      setResults([]);
+      setShowDropdown(false);
+      setLoading(false);
+      return;
+    }
+
+    // TỐI ƯU 2: Tạo AbortController để hủy các request gửi đi trước đó nếu người dùng tiếp tục gõ
+    const abortController = new AbortController();
+
+    // Giảm xuống 400ms - 500ms là khoảng thời gian lý tưởng nhất cho UX tìm kiếm
     const timer = setTimeout(async () => {
-      const trimmed = query.trim();
-      if (trimmed.length >= 1) {
-        setLoading(true);
-        setError(false);
-        try {
-          const res = await fetch(`${backendUrl}/stories/search?query=${encodeURIComponent(trimmed)}`);
-          
-          if (!res.ok) {
-             throw new Error(`Server Error: ${res.status}`);
-          }
-
-          const data = await res.json();
-          let finalData = Array.isArray(data) ? data : (data.data || []);
-          
-          // --- THUẬT TOÁN SẮP XẾP ƯU TIÊN CHỮ CÁI ĐẦU ---
-          const lowerQuery = trimmed.toLowerCase();
-          finalData = [...finalData].sort((a, b) => {
-            const nameA = (a.tenTruyen || "").toLowerCase();
-            const nameB = (b.tenTruyen || "").toLowerCase();
-            
-            const startsWithA = nameA.startsWith(lowerQuery);
-            const startsWithB = nameB.startsWith(lowerQuery);
-
-            if (startsWithA && !startsWithB) return -1; // Đẩy truyện bắt đầu bằng chữ V lên đầu
-            if (!startsWithA && startsWithB) return 1;  // Hạ các truyện khác xuống dưới
-            return 0; // Giữ nguyên thứ tự nếu cả 2 cùng bắt đầu hoặc cùng chứa ở giữa
-          });
-          // ---------------------------------------------
-
-          setResults(finalData);
-          setShowDropdown(true);
-        } catch (error) {
-          console.error("Lỗi search dropdown:", error);
-          setResults([]);
-          setError(true); 
-        } finally {
-          setLoading(false);
+      setLoading(true);
+      setError(false);
+      try {
+        const res = await fetch(
+          `${backendUrl}/stories/search?query=${encodeURIComponent(trimmed)}`,
+          { signal: abortController.signal } // Gắn signal vào đây
+        );
+        
+        if (!res.ok) {
+           throw new Error(`Server Error: ${res.status}`);
         }
-      } else {
-        setResults([]);
-        setShowDropdown(false);
-      }
-    }, 1200); // Khoảng thời gian lý tưởng từ 1 - 2 giây theo yêu cầu của bạn
 
-    return () => clearTimeout(timer);
+        const data = await res.json();
+        const finalData = Array.isArray(data) ? data : (data.data || []);
+        
+        // --- THUẬT TOÁN SẮP XẾP ƯU TIÊN CHỮ CÁI ĐẦU ---
+        const lowerQuery = trimmed.toLowerCase();
+        const sortedData = [...finalData].sort((a, b) => {
+          const nameA = (a.tenTruyen || "").toLowerCase();
+          const nameB = (b.tenTruyen || "").toLowerCase();
+          
+          const startsWithA = nameA.startsWith(lowerQuery);
+          const startsWithB = nameB.startsWith(lowerQuery);
+
+          if (startsWithA && !startsWithB) return -1;
+          if (!startsWithA && startsWithB) return 1;
+          return 0;
+        });
+        // ---------------------------------------------
+
+        setResults(sortedData);
+        setShowDropdown(true);
+      } catch (err: any) {
+        // Nếu lỗi do ta chủ động hủy request (AbortError) thì bỏ qua không báo lỗi
+        if (err.name === "AbortError") return;
+
+        console.error("Lỗi search dropdown:", err);
+        setResults([]);
+        setError(true); 
+      } finally {
+        setLoading(false);
+      }
+    }, 450); // Thay vì 1200ms, dùng 450ms vừa bảo vệ tốt Backend vừa mượt cho User
+
+    // Clean up function: Chạy khi query thay đổi
+    return () => {
+      clearTimeout(timer);
+      abortController.abort(); // Hủy request API cũ ngay lập tức
+    };
   }, [query, backendUrl]);
 
-  // Xử lý đóng dropdown khi bấm ra ngoài
+  // Đóng dropdown khi bấm ra ngoài
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
