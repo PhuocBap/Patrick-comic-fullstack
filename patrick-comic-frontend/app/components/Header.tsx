@@ -54,7 +54,7 @@ export default function Header() {
   const isActive = (path: string) => pathname === path;
 
   return (
-    <header className="bg-[#1a1a1a] border-b border-gray-700 py-3 sticky top-0 z-[9999] shadow-2xl">
+    <header className="sticky t-0 bg-[#1a1a1a] border-b border-gray-700 py-3 sticky top-0 z-[9999] shadow-2xl">
       <div className="container mx-auto px-4 flex items-center justify-between gap-4 relative">
         
         {/* LOGO */}
