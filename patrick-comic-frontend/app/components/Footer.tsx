@@ -1,3 +1,5 @@
+import Link from "next/link"; // Nhớ import Link từ next/link nhé
+
 export default function Footer() {
   return (
     <footer className="bg-[#111] text-gray-400 py-8 mt-10 border-t border-gray-800">
@@ -9,11 +11,17 @@ export default function Footer() {
           </p>
         </div>
 
-        {/* Links */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center text-sm mb-8">
-          <a href="#" className="hover:text-white transition">truyencuaphuocbap</a>
-          <a href="#" className="hover:text-white transition">patrick-comic</a>
-          <a href="#" className="hover:text-white transition">phuocbap13@gmail.com</a>         
+        {/* Links: Đã đổi sang flex để tự động căn đều giữa và giãn khoảng cách mượt mà */}
+        <div className="flex flex-wrap justify-center items-center gap-x-8 gap-y-3 text-center text-sm mb-8">
+          <Link href="/" className="hover:text-white transition">
+            truyencuaphuocbap
+          </Link>
+          <Link href="/" className="hover:text-white transition">
+            patrick-comic
+          </Link>
+          <a href="mailto:phuocbap13@gmail.com" className="hover:text-white transition">
+            phuocbap13@gmail.com
+          </a>         
         </div>
 
         {/* Copyright */}
