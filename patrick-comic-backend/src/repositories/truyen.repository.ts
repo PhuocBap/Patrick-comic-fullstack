@@ -45,18 +45,26 @@ export class TruyenRepository {
     return this.prisma.truyen.count({ where });
   }
 
+  // 🔥 CẬP NHẬT: Chuyển đổi sang `select` giúp giảm thiểu bộ nhớ RAM/Băng thông mạng và đảm bảo lấy trường `slug` cho Frontend
   async findComicsOrderBy(orderByField: any, limit: number) {
     return this.prisma.truyen.findMany({
       orderBy: orderByField,
       take: limit,
-      include: {
+      select: {
+        id: true,
+        tenTruyen: true,
+        slug: true,
+        thumbnail: true,
+        luotXem: true,
+        luotXemNgay: true,
+        luotXemTuan: true,
+        luotXemThang: true,
         chuongs: { 
           take: 1, 
           orderBy: { soChuong: 'desc' }, 
           select: { soChuong: true } 
-        },
-        theLoais: true,
-      },
+        }
+      }
     });
   }
 
@@ -151,6 +159,15 @@ export class TruyenRepository {
         luotXemTuan: { increment: 1 },
         luotXemThang: { increment: 1 },
         ngayCapNhat: ngayCapNhatCu,
+      },
+    });
+  }
+
+  // 🔥 THÊM MỚI: Hàm xử lý Reset lượt xem định kỳ cho CronJob trong TruyenService
+  async resetViews(field: 'luotXemNgay' | 'luotXemTuan' | 'luotXemThang') {
+    return this.prisma.truyen.updateMany({
+      data: {
+        [field]: 0,
       },
     });
   }

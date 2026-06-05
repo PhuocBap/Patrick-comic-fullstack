@@ -36,7 +36,7 @@ function XepHangContent() {
           <h1 className="text-5xl font-black uppercase italic mb-8 tracking-tighter">Bảng Xếp Hạng</h1>
           <div className="flex justify-center gap-3">
             {['ngay', 'tuan', 'thang'].map((t) => (
-              <a 
+              <Link
                 key={t}
                 href={`/xep-hang?top=${t}`}
                 className={`px-8 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest border transition-all ${
@@ -46,7 +46,7 @@ function XepHangContent() {
                 }`}
               >
                 {t === 'ngay' ? 'Ngày' : t === 'tuan' ? 'Tuần' : 'Tháng'}
-              </a>
+              </Link>
             ))}
           </div>
         </div>

@@ -36,6 +36,7 @@ import { AdminRepository } from './repositories/admin.repository';
 
 @Module({
   imports: [
+    // Kích hoạt module lập lịch tác vụ ẩn định kỳ của NestJS
     ScheduleModule.forRoot(),
   ],
   controllers: [
@@ -45,7 +46,7 @@ import { AdminRepository } from './repositories/admin.repository';
     CommentController,
     FollowController,
     TheLoaiController, 
-    UserController, // ✅ Đã sửa từ UserService thành UserController ở đây
+    UserController,
     AuthController,
     ReportController,
     AdminController, 
