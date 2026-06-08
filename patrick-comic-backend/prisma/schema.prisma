@@ -22,28 +22,31 @@ model NguoiDung {
 }
 
 model Truyen {
-  id            Int       @id @default(autoincrement())
+  id            Int         @id @default(autoincrement())
   tenTruyen     String
   tenKhongDau   String?   
-  slug          String    @unique
+  slug          String      @unique
   tacGia        String?
   moTa          String?
   thumbnail     String?   
-  trangThai     String    @default("ĐANG_RA")
-  luotXem       Int       @default(0)
+  trangThai     String      @default("ĐANG_RA")
+  luotXem       Int         @default(0)
   luotXemNgay   Int         @default(0)
   luotXemTuan   Int         @default(0)
   luotXemThang  Int         @default(0)
-  ngayTao       DateTime  @default(now())
-  ngayCapNhat   DateTime  @updatedAt
+  ngayTao       DateTime    @default(now())
+  ngayCapNhat   DateTime    @updatedAt
 
   chuongs       Chuong[]
   binhLuans     BinhLuan[]
   theoDois      TheoDoi[]
   theLoais      TheLoai[]
   lichSuDocs    LichSuDoc[] 
+
+  // TỐI ƯU: Đánh index cho các trường tìm kiếm và sắp xếp bảng xếp hạng
   @@index([tenKhongDau]) 
   @@index([tenTruyen])
+  @@index([luotXem(sort: Desc)]) // Tối ưu cho API lấy top truyện xem nhiều nhất
 }
 
 model TheLoai {
@@ -64,7 +67,9 @@ model Chuong {
   lichSuDocs   LichSuDoc[]
   binhLuans    BinhLuan[]
   baoLois      BaoLoi[]
+
   @@unique([truyenId, soChuong])
+  @@index([truyenId]) // TỐI ƯU: Tìm toàn bộ chương của 1 truyện siêu tốc
 }
 
 model BinhLuan {
@@ -79,8 +84,11 @@ model BinhLuan {
   truyen       Truyen    @relation(fields: [truyenId], references: [id])
   
   chuongId     Int?      
-  // CẬP NHẬT: Thêm onDelete: Cascade để khi xóa chương thì xóa luôn bình luận của chương đó
   chuong       Chuong?   @relation(fields: [chuongId], references: [id], onDelete: Cascade)
+
+  // TỐI ƯU: Phục vụ cho tính năng lấy bình luận của truyện/chương theo thời gian mới nhất (Phân trang)
+  @@index([truyenId, ngayBinhLuan(sort: Desc)])
+  @@index([chuongId, ngayBinhLuan(sort: Desc)])
 }
 
 model TheoDoi {
@@ -94,11 +102,12 @@ model TheoDoi {
   truyen       Truyen    @relation(fields: [truyenId], references: [id])
 
   @@unique([nguoiDungId, truyenId])
+  @@index([nguoiDungId]) // TỐI ƯU: Tải trang "Truyện đang theo dõi" của 1 user cụ thể cực nhanh
 }
 
 model LichSuDoc {
-  id           String   @id @default(cuid())
-  thoiGianDoc  DateTime @default(now()) @updatedAt
+  id           String    @id @default(cuid())
+  thoiGianDoc  DateTime  @default(now()) @updatedAt
   
   nguoiDungId  String
   nguoiDung    NguoiDung @relation(fields: [nguoiDungId], references: [id])
@@ -107,10 +116,10 @@ model LichSuDoc {
   truyen       Truyen    @relation(fields: [truyenId], references: [id])
 
   chuongId     Int      
-  // CẬP NHẬT: Thêm onDelete: Cascade để khi xóa chương thì xóa luôn lịch sử đọc của chương đó
   chuong       Chuong    @relation(fields: [chuongId], references: [id], onDelete: Cascade)
 
   @@unique([nguoiDungId, truyenId])
+  @@index([nguoiDungId, thoiGianDoc(sort: Desc)]) // TỐI ƯU: Lấy lịch sử đọc của user để xếp từ mới đến cũ
 }
 
 model BaoLoi {
@@ -120,6 +129,7 @@ model BaoLoi {
   ngayTao   DateTime @default(now())
   
   chuongId  Int
-  // CẬP NHẬT: Thêm onDelete: Cascade để khi xóa chương thì xóa luôn báo lỗi của chương đó
   chuong    Chuong   @relation(fields: [chuongId], references: [id], onDelete: Cascade)
+
+  @@index([chuongId]) // TỐI ƯU: Cho trang quản trị Admin lọc lỗi theo chương
 }
