@@ -6,7 +6,12 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import * as https from 'https';
 import * as dns from 'dns'; 
-import * as puppeteer from 'puppeteer';
+// SỬA: Thay đổi import sang puppeteer-extra để dùng Plugin Stealth chống chặn
+import puppeteer from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+
+// Kích hoạt tính năng tàng hình chống Cloudflare Connection Closed
+puppeteer.use(StealthPlugin());
 
 interface ChapterItem {
   url: string;
@@ -45,22 +50,31 @@ export class CrawlService {
     });
   }
 
-  private async getHtmlBypassCloudflare(url: string, sharedBrowser?: puppeteer.Browser): Promise<string> {
+  // TỐI ƯU: Cấu hình trình duyệt tàng hình, tự dọn dẹp bộ nhớ tránh rò rỉ RAM gây ngắt kết nối
+  private async getHtmlBypassCloudflare(url: string, sharedBrowser?: any): Promise<string> {
+    const isShared = !!sharedBrowser;
     const browser = sharedBrowser || await puppeteer.launch({
       headless: true,
       args: [
         '--no-sandbox', 
         '--disable-setuid-sandbox',
-        '--disable-blink-features=AutomationControlled'
+        '--disable-dev-shm-usage', // TỐI ƯU: Tránh tràn bộ nhớ đệm dùng chung của Linux/Docker
+        '--disable-web-security',
+        '--disable-features=IsolateOrigins,site-per-process'
       ]
     });
 
     const page = await browser.newPage();
     try {
+      // TỐI ƯU: Tăng cường giả lập thông số người dùng thật
+      await page.evaluateOnNewDocument(() => {
+        Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+      });
+
       await page.setRequestInterception(true);
       page.on('request', (req) => {
         const resourceType = req.resourceType();
-        if (['image', 'font', 'media'].includes(resourceType)) {
+        if (['image', 'font', 'media', 'stylesheet'].includes(resourceType)) {
           req.abort();
         } else {
           req.continue();
@@ -68,39 +82,22 @@ export class CrawlService {
       });
 
       await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36');
-      await page.setViewport({ width: 1440, height: 1200 });
+      await page.setViewport({ width: 1280, height: 800 });
       
-      await page.goto(url, { waitUntil: 'networkidle2', timeout: 25000 });
-      await page.waitForSelector('#content, #content_chap, .page-chapter', { timeout: 8000 }).catch(() => {});
+      // TỐI ƯU: Tăng thời gian chờ đợi trang phản hồi tránh timeout giữa chừng khi mạng lag
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+      await page.waitForSelector('#content, #content_chap, .page-chapter', { timeout: 5000 }).catch(() => {});
 
-      await page.evaluate(async () => {
-        await new Promise<void>((resolve) => {
-          let totalHeight = 0;
-          const distance = 500; 
-          const timer = setInterval(() => {
-            const scrollHeight = document.body.scrollHeight;
-            window.scrollBy(0, distance);
-            totalHeight += distance;
-
-            if (totalHeight >= scrollHeight || totalHeight > 25000) {
-              clearInterval(timer);
-              resolve();
-            }
-          }, 80); 
-        });
-      });
-
-      await new Promise(resolve => setTimeout(resolve, 600));
       const html = await page.content();
-      
-      await page.close(); 
-      if (!sharedBrowser) await browser.close(); 
-      
       return html;
     } catch (err) {
-      await page.close().catch(() => {});
-      if (!sharedBrowser) await browser.close().catch(() => {});
       throw err;
+    } finally {
+      // ĐẢM BẢO: Luôn đóng Tab sau khi lấy xong dữ liệu để giải phóng RAM lập tức
+      await page.close().catch(() => {});
+      if (!isShared) {
+        await browser.close().catch(() => {});
+      }
     }
   }
 
@@ -119,7 +116,7 @@ export class CrawlService {
     truyenId: number, 
     soChuong?: number, 
     tenChuong?: string,
-    sharedBrowser?: puppeteer.Browser
+    sharedBrowser?: any
   ) {
     try {
       const { cleanUrl, domain } = this.cleanUrlAndGetDomain(urlChapter);
@@ -144,7 +141,7 @@ export class CrawlService {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
           },
           httpsAgent: bypassAgent,
-          timeout: 8000 
+          timeout: 6000 
         });
         html = res.data;
       } catch (axiosError) {
@@ -215,7 +212,7 @@ export class CrawlService {
   async crawlAllChaptersFromStory(urlStory: string, truyenId: number) {
     const globalBrowser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled']
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
 
     try {
@@ -289,7 +286,8 @@ export class CrawlService {
         try {
           await this.crawlSingleChapterFromBlogTruyen(chapter.url, Number(truyenId), chapter.soChuong, chapter.tenChuong, globalBrowser);
           successCount++;
-          await new Promise(resolve => setTimeout(resolve, 500)); 
+          // TỐI ƯU: Tăng thời gian nghỉ giữa các tập lên 1.5s tránh bị block IP khi bóc tách ảnh
+          await new Promise(resolve => setTimeout(resolve, 1500)); 
         } catch (err: any) {
           console.error(`Lỗi bỏ qua chương ${chapter.soChuong} của truyện ID ${truyenId}: ${err.message}`);
           failCount++;
@@ -310,10 +308,10 @@ export class CrawlService {
     }
   }
 
- async crawlMultiStoriesFromPage(urlPage: string) {
+  async crawlMultiStoriesFromPage(urlPage: string) {
     const globalBrowser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled']
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
 
     try {
@@ -389,14 +387,13 @@ export class CrawlService {
           let extractedMoTa = $story('.detail .content .detail-content').text().trim() 
             || $story('.detail .content').find('p, span').text().trim();
           if (!extractedMoTa) {
-  extractedMoTa = "Truyện tự động cập nhật hệ thống";
-} else {
-  // 1. Thay đổi tên thương hiệu trước
-  extractedMoTa = extractedMoTa
-    .replace(/blogtruyenmoi\.net/gi, 'patrick-comic.vercel.app')
-    .replace(/blogtruyenmoi/gi, 'PATRICK COMIC')
-    .replace(/blogtruyen/gi, 'PATRICK COMIC');
-}
+            extractedMoTa = "Truyện tự động cập nhật hệ thống";
+          } else {
+            extractedMoTa = extractedMoTa
+              .replace(/blogtruyenmoi\.net/gi, 'patrick-comic.vercel.app')
+              .replace(/blogtruyenmoi/gi, 'PATRICK COMIC')
+              .replace(/blogtruyen/gi, 'PATRICK COMIC');
+          }
 
           let extractedTacGia = "Đang cập nhật";
           const extractedTheLoais: string[] = [];
@@ -491,19 +488,20 @@ export class CrawlService {
 
           console.log(`[Hệ thống] Đang tiến hành cào ${chaptersToCrawl.length} chương mới cho truyện [${story.tenTruyen}]...`);
           
-          let localSuccessCount = 0; // Biến đếm số chương thực tế cào thành công của bộ truyện này
+          let localSuccessCount = 0; 
 
           for (const chapter of chaptersToCrawl) {
             try {
               await this.crawlSingleChapterFromBlogTruyen(chapter.url, Number(currentTruyenId), chapter.soChuong, chapter.tenChuong, globalBrowser);
               localSuccessCount++;
-              await new Promise(resolve => setTimeout(resolve, 500)); 
+              // TỐI ƯU: Cho bot nghỉ từ 1 đến 2.5 giây ngẫu nhiên giữa các chương để giả lập hành vi người thật
+              const delayRandom = Math.floor(Math.random() * (2500 - 1000 + 1)) + 1000;
+              await new Promise(resolve => setTimeout(resolve, delayRandom)); 
             } catch (err: any) {
               console.error(`Lỗi bỏ qua chương ${chapter.soChuong} của truyện ${story.tenTruyen}: ${err.message}`);
             }
           }
 
-          // CHỈ CẬP NHẬT TRUYỆN CŨ VÀ ĐẦY LÊN ĐẦU KHI CÓ ÍT NHẤT 1 CHƯƠNG THÀNH CÔNG KHÔNG LỖI
           if (!isNewStory) {
             if (localSuccessCount > 0) {
               await this.truyenService.updateComic(currentTruyenId, {
@@ -521,7 +519,8 @@ export class CrawlService {
             }
           }
 
-          await new Promise(resolve => setTimeout(resolve, 1200)); 
+          // TỐI ƯU: Tăng thời gian chuyển tiếp giữa các bộ truyện lên 3.5 giây để IP hồi phục
+          await new Promise(resolve => setTimeout(resolve, 3500)); 
 
         } catch (storyError: any) {
           console.error(`Lỗi nghiêm trọng khi xử lý truyện lẻ [${story.tenTruyen}]:`, storyError.message);
