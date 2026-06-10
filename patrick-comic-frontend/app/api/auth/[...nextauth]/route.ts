@@ -10,10 +10,18 @@ const handler = NextAuth({
         matKhau: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
+        // 🔥 THÊM MỚI: Check chặn ngay từ frontend nếu object credentials bị rỗng hoặc thiếu trường khi NextAuth kích hoạt ngầm
+        if (!credentials?.tenDangNhap || !credentials?.matKhau) {
+          throw new Error("Vui lòng điền đầy đủ tên đăng nhập và mật khẩu!");
+        }
+
         try {
           const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/validate`, {
             method: 'POST',
-            body: JSON.stringify(credentials),
+            body: JSON.stringify({
+              tenDangNhap: credentials.tenDangNhap,
+              matKhau: credentials.matKhau
+            }),
             headers: { "Content-Type": "application/json" }
           });
 
@@ -34,7 +42,6 @@ const handler = NextAuth({
           }
           return null;
         } catch (error: any) {
-          // Ném lỗi ra ngoài để hàm signIn nhận được giá trị error động
           throw new Error(error.message || "Tài khoản hoặc mật khẩu không chính xác!");
         }
       }
