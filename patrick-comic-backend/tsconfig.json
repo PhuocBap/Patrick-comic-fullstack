@@ -4,12 +4,13 @@
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "ignoreDeprecations": "5.0",
-    "rootDir": ".",  // <--- Thêm dòng này để chấp nhận cả src và api làm gốc
+    "rootDir": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@lib/*": ["./src/lib/*"]
     },
-    "types": ["node", "jest", "next-auth"],
+    // 🔥 THAY ĐỔI: Xóa hoặc chuyển thành mảng rỗng để tự động quét node_modules/@types
+    "types": [], 
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,

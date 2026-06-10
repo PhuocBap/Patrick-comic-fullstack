@@ -46,7 +46,11 @@ model Truyen {
   // TỐI ƯU: Đánh index cho các trường tìm kiếm và sắp xếp bảng xếp hạng
   @@index([tenKhongDau]) 
   @@index([tenTruyen])
-  @@index([luotXem(sort: Desc)]) // Tối ưu cho API lấy top truyện xem nhiều nhất
+  @@index([ngayCapNhat(sort: Desc)]) // ⚡ Tăng tốc API trang chủ lấy truyện mới nhất cực mạnh!
+  @@index([luotXem(sort: Desc)])
+  @@index([luotXemNgay(sort: Desc)])   // ⚡ Phục vụ Fallback BXH Ngày
+  @@index([luotXemTuan(sort: Desc)])   // ⚡ Phục vụ Fallback BXH Tuần
+  @@index([luotXemThang(sort: Desc)])  // ⚡ Phục vụ Fallback BXH Tháng
 }
 
 model TheLoai {

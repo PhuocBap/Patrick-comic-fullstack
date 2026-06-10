@@ -1,6 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { PrismaService } from './prisma.service';
+
+// Import Redis Module chuẩn
+import { RedisModule } from './service/redis.module'; 
+
 import { TruyenService } from './service/truyen.service';
 import { TruyenController } from './controllers/truyen.controller'; 
 import { ChuongService } from './service/chuong.service';
@@ -34,10 +38,15 @@ import { TruyenRepository } from './repositories/truyen.repository';
 import { ChuongRepository } from './repositories/chuong.repository';
 import { AdminRepository } from './repositories/admin.repository';
 
+// 🔥 THÊM MỚI: Import ThrottlerRedisGuard chống spam
+import { ThrottlerRedisGuard } from './common/guards/throttler.guard';
+
 @Module({
   imports: [
-    // Kích hoạt module lập lịch tác vụ ẩn định kỳ của NestJS
     ScheduleModule.forRoot(),
+    // 🔥 ĐƯA VÀO ĐÂY: Vì RedisModule có @Global() nên khi import ở đây, 
+    // tất cả các Service khác trong hệ thống đều có thể sử dụng được luôn.
+    RedisModule, 
   ],
   controllers: [
     TruyenController, 
@@ -64,16 +73,19 @@ import { AdminRepository } from './repositories/admin.repository';
     AdminRepository,
     TruyenService, 
     ChuongService,
-    HistoryService,    
+    HistoryService,     
     CommentService,
     FollowService,
-    TheLoaiService,    
+    TheLoaiService,     
     UserService,
     AuthService, 
     ReportService, 
     AdminService,   
     CrawlService,
+    
+    // 🔥 THÊM VÀO ĐÂY: Để NestJS biên dịch và quản lý vòng đời của Guard này
+    ThrottlerRedisGuard,
   ],
-  exports: [PrismaService],
+  exports: [PrismaService] 
 })
 export class AppModule {}

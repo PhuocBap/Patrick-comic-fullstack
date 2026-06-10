@@ -163,6 +163,20 @@ export class TruyenRepository {
     });
   }
 
+  // 🔥 THÊM MỚI: Hàm cập nhật gộp lượt xem tích lũy từ Redis, bảo lưu ngày cập nhật cũ
+  async updateMultipleViews(id: number, amount: number, ngayCapNhatCu: Date) {
+    return this.prisma.truyen.update({
+      where: { id },
+      data: {
+        luotXem: { increment: amount },
+        luotXemNgay: { increment: amount },
+        luotXemTuan: { increment: amount },
+        luotXemThang: { increment: amount },
+        ngayCapNhat: ngayCapNhatCu,
+      },
+    });
+  }
+
   // 🔥 THÊM MỚI: Hàm xử lý Reset lượt xem định kỳ cho CronJob trong TruyenService
   async resetViews(field: 'luotXemNgay' | 'luotXemTuan' | 'luotXemThang') {
     return this.prisma.truyen.updateMany({

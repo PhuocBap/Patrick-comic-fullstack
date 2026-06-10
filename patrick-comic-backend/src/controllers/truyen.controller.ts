@@ -1,5 +1,8 @@
-import { Controller, Get, Post, Patch, Delete, Body, Query, Param, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Query, Param, BadRequestException, UseGuards } from '@nestjs/common'; // 🔥 CẬP NHẬT: Thêm UseGuards
 import { TruyenService } from '../service/truyen.service';
+
+// 🔥 THÊM MỚI: Import ThrottlerRedisGuard để hết lỗi đỏ lạc lõng
+import { ThrottlerRedisGuard } from '../common/guards/throttler.guard';
 
 @Controller('stories')
 export class TruyenController {
@@ -11,6 +14,7 @@ export class TruyenController {
   }
 
   @Get('search')
+  @UseGuards(ThrottlerRedisGuard) // 🔥 Đã được bọc "khiên" chống spam bằng Redis an toàn
   async search(@Query('query') query: string) {
     return this.truyenService.searchComics(query);
   }

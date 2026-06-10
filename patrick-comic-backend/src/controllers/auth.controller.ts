@@ -17,7 +17,16 @@ export class AuthController {
    * POST: http://localhost:3001/auth/validate (Dùng nội bộ cho NextAuth)
    */
   @Post('validate')
-  async validate(@Body() body: { tenDangNhap: string; matKhau: string }) {
-    return this.authService.validateUser(body.tenDangNhap, body.matKhau);
+  async validate(@Body() body: { tenDangNhap?: string; matKhau?: string }) {
+    // 🔥 AN TOÀN: Truyền các trường với toán tử điều kiện dự phòng để không bao giờ bị undefined
+    return this.authService.validateUser(body?.tenDangNhap || '', body?.matKhau || '');
+  }
+
+  /**
+   * 🔥 THÊM MỚI POST: http://localhost:3001/auth/logout
+   */
+  @Post('logout')
+  async logout(@Body() body: { tenDangNhap?: string }) {
+    return this.authService.invalidateSession(body?.tenDangNhap || '');
   }
 }
