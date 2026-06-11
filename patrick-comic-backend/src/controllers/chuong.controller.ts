@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query, ParseIntPipe, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, ParseIntPipe, BadRequestException, UseGuards } from '@nestjs/common';
 import { ChuongService } from '../service/chuong.service';
 import { CrawlService } from '../service/crawl.service';
+import { ThrottlerRedisGuard } from '../common/guards/throttler.guard';
 
 @Controller('chuong')
+@UseGuards(ThrottlerRedisGuard)
 export class ChuongController {
   constructor(
     private readonly chuongService: ChuongService,

@@ -130,4 +130,31 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       return -1;
     }
   }
+  async scan(pattern: string): Promise<string[]> {
+  if (!this.isConnected) return [];
+  let cursor = '0';
+  const keys: string[] = [];
+  try {
+    do {
+      // Mỗi lần quét lấy ra tối đa 100 keys để không block hệ thống
+      const reply = await this.redisClient.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+      cursor = reply[0];
+      keys.push(...reply[1]);
+    } while (cursor !== '0');
+    return keys;
+  } catch (err) {
+    console.error('Lỗi khi SCAN Redis:', err);
+    return [];
+  }
+}
+
+async expire(key: string, seconds: number): Promise<number> {
+  if (!this.isConnected) return 0;
+  try {
+    return await this.redisClient.expire(key, seconds);
+  } catch (err) {
+    console.error('Lỗi khi EXPIRE Redis:', err);
+    return 0;
+  }
+}
 }

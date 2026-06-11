@@ -13,8 +13,7 @@ function AdminCommentsContent() {
   const searchParams = useSearchParams();
   const chuongId = searchParams.get("chuongId");
   const truyenId = searchParams.get("truyenId");
-
-  const fetchComments = async () => {
+const fetchComments = async () => {
     try {
       let queryParams = [];
       if (chuongId) queryParams.push(`chuongId=${chuongId}`);
@@ -26,15 +25,21 @@ function AdminCommentsContent() {
       }
 
       const res = await fetch(url);
-      const data = await res.json();
-      setComments(data);
+      const result = await res.json();
+      
+      // 🎯 TỐI ƯU & FIX LỖI: Kiểm tra nếu có result.data thì lấy mảng, không thì dùng fallback mảng rỗng
+      if (res.ok) {
+        setComments(result.data || (Array.isArray(result) ? result : []));
+      } else {
+        setComments([]);
+      }
     } catch (error) { 
-      console.error("Lỗi:", error); 
+      console.error("Lỗi:", error);
+      setComments([]); // Fallback mảng rỗng phòng khi lỗi kết nối mạng
     } finally { 
       setLoading(false); 
     }
   };
-
   useEffect(() => { 
     fetchComments(); 
   }, [chuongId, truyenId]);
